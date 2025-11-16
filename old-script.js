@@ -157,7 +157,7 @@ function handleSwipe() {
 // UI кнопки
 restartBtn.addEventListener('click', initGame);
 resumeBtn.addEventListener('click', () => { paused=false; pauseModal.classList.add('hidden'); });
-exitBtn.addEventListener('click', () => { window.location.href='snake-menu.html'; });
+exitBtn.addEventListener('click', () => { window.location.href='index.html'; });
 
 function togglePause() {
   if(isDead) return;

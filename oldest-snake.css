@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+body {
+  margin: 0;
+  background: rgba(255, 255, 0, 0.596); /* тёплый светло-жёлтый */
+  font-family: 'Orbitron', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #3a7f3a; /* спокойный зелёный */
+  overflow: hidden;
+}
+
+/* Контейнер */
+#game-container {
+  position: relative;
+}
+
+/* Канвас — чёрный, как старые экраны */
+#game-canvas {
+  border: 2px solid #3a7f3a;
+  background: #000; 
+  display: block;
+}
+
+/* UI панель */
+#ui {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#score {
+  font-size: 1.2em;
+  padding: 5px 15px;
+  color: #3a7f3a;
+}
+
+/* Кнопка рестарта — старый стиль */
+#restart-btn {
+  background: #f4f1d5;
+  color: #3a7f3a;
+  border: 2px solid #3a7f3a;
+  padding: 5px 15px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+#restart-btn:hover {
+  background: #dcd8b0;
+}
+
+/* Пауза */
+#pause-modal {
+  position: absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.65);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#pause-box {
+  background: #f4f1d5;
+  padding:20px;
+  border:2px solid #3a7f3a;
+  text-align:center;
+  color:#3a7f3a;
+}
+
+#pause-box p {
+  font-size:2em;
+  margin-bottom:15px;
+}
+
+#pause-box button {
+  margin:5px;
+  padding:10px 20px;
+  background:#3a7f3a;
+  color:#f4f1d5;
+  border:none;
+  cursor:pointer;
+  font-size:1em;
+}
+
+#pause-box button:hover {
+  background:#2d5f2d;
+}
+
+/* Спид и рекорд */
+#speedDisplay,
+#highscoreDisplay {
+  position: absolute;
+  top: 10px;
+  padding: 6px 12px;
+  font-size: 18px;
+  background: #f4f1d5;
+  border: 2px solid #3a7f3a;
+  border-radius: 4px;
+  color: #3a7f3a;
+}
+
+#speedDisplay { left: 10px; }
+#highscoreDisplay { right: 10px; }
+
+/* GAME OVER */
+.game-over-text {
+  color: #3a7f3a !important;
+  text-shadow: none;
+}

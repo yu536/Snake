@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+body {
+  margin: 0;
+  background: #101010; /* тёмный фон */
+  font-family: 'Orbitron', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: #3aff3a; /* красивый зелёный */
+  overflow: hidden;
+}
+
+/* Контейнер */
+#game-container {
+  position: relative;
+}
+
+/* Канвас – простой, похожий на старую игру */
+#game-canvas {
+  border: 2px solid #3aff3a;
+  background: #000; /* классический чёрный */
+  display: block;
+}
+
+/* UI */
+#ui {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#score {
+  font-size: 1.2em;
+  padding: 5px 15px;
+  color: #3aff3a;
+}
+
+#restart-btn {
+  background: transparent;
+  color: #c7b948; /* тёмно-жёлтый */
+  border: 1px solid #c7b948;
+  padding: 5px 15px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+#restart-btn:hover {
+  background: #c7b948;
+  color: #000;
+}
+
+/* Пауза */
+#pause-modal {
+  position: absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.75);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#pause-box {
+  background: #111;
+  padding:20px;
+  border:2px solid #3aff3a;
+  text-align:center;
+}
+
+#pause-box p {
+  font-size:2em;
+  margin:0 0 15px;
+  color: #3aff3a;
+}
+
+#pause-box button {
+  margin:5px;
+  padding:10px 20px;
+  background:#3aff3a;
+  color:#000;
+  border:none;
+  font-size:1em;
+  cursor:pointer;
+}
+
+#pause-box button:hover {
+  background:#c7b948;
+  color:#000;
+}
+
+/* Информационные дисплеи */
+#speedDisplay,
+#highscoreDisplay {
+  position: absolute;
+  top: 10px;
+  padding: 5px 12px;
+  font-size: 18px;
+  color: #3aff3a;  /* зелёный */
+  background: #000;
+  border: 1px solid #3aff3a;
+  border-radius: 6px;
+}
+
+#speedDisplay { left: 10px; }
+#highscoreDisplay { right: 10px; }

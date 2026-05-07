@@ -3,76 +3,540 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
-
+  <title>SnakeX</title>
+  <link rel="icon" href="favicon.jpg" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;700;900&display=swap" rel="stylesheet">
   <style>
-    .card {
-      transition: transform .3s ease, box-shadow .3s ease;
-      transform-style: preserve-3d;
-    }
-    .card:hover {
-      transform: translateY(-6px) rotateX(6deg) rotateY(6deg);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    :root {
+      --c1: #00ffe0;
+      --c2: #ff3cac;
+      --c3: #f7b731;
+      --panel: rgba(255,255,255,0.04);
+      --border: rgba(0,255,224,0.2);
     }
 
-    .card:active {
-      transform: scale(0.96);
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      font-family: 'Exo 2', sans-serif;
+      overflow-x: hidden;
+      overflow-y: auto;
+      color: #fff;
+    }
+
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-size: 40px 40px;
+      animation: gridMove 20s linear infinite;
+    }
+    @keyframes gridMove {
+      0%   { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+    .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.18;
+      animation: floatOrb 8s ease-in-out infinite;
+    }
+    .orb1 { width:360px; height:360px; top:-90px;  left:-90px;  animation-delay:0s; }
+    .orb2 { width:260px; height:260px; bottom:-70px; right:-70px; animation-delay:3s; }
+    .orb3 { width:200px; height:200px; top:40%; left:55%;        animation-delay:5s; }
+    @keyframes floatOrb {
+      0%,100% { transform:translate(0,0) scale(1); }
+      50%     { transform:translate(18px,-18px) scale(1.08); }
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .wrapper {
+      width: 100%; max-width: 520px;
+      display: flex; flex-direction: column;
+      gap: 14px;
+    }
+
+    .logo { text-align:center; animation: fadeDown .6s ease both; }
+    .logo-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: clamp(42px,10vw,84px); font-weight:700;
+      letter-spacing:8px; line-height:1;
+      background: linear-gradient(135deg,var(--c1) 0%,#fff 50%,var(--c2) 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      filter: drop-shadow(0 0 20px rgba(0,255,224,.4));
+    }
+    .logo-sub { font-size:11px; letter-spacing:5px; color:rgba(255,255,255,.38); text-transform:uppercase; margin-top:4px; }
+    .snake-emoji { font-size:clamp(26px,7vw,46px); display:block; margin-bottom:6px; animation:bounce 2s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(14px)}  to{opacity:1;transform:translateY(0)} }
+
+    .panel {
+      width:100%; background:var(--panel);
+      border:1px solid var(--border); border-radius:16px;
+      backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+      overflow:hidden; animation:fadeUp .5s ease both;
+    }
+    .panel:nth-child(2){animation-delay:.08s}
+    .panel:nth-child(3){animation-delay:.16s}
+
+    .modes { display:grid; grid-template-columns:repeat(3,1fr); }
+    .mode-card {
+      padding:18px 10px; text-align:center; cursor:pointer;
+      border-right:1px solid var(--border);
+      transition:background .2s,transform .12s;
+      user-select:none; -webkit-tap-highlight-color:transparent;
+    }
+    .mode-card:last-child { border-right:none; }
+    .mode-card:hover      { background:rgba(0,255,224,.07); }
+    .mode-card:active     { transform:scale(.95); }
+    .mode-card.selected   { background:rgba(0,255,224,.14); }
+    .mode-icon  { font-size:24px; display:block; margin-bottom:6px; }
+    .mode-name  { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--c1); }
+    .mode-desc  { font-size:9px; color:rgba(255,255,255,.36); margin-top:3px; line-height:1.4; }
+
+    .settings-header {
+      padding:14px 18px; display:flex; align-items:center; gap:10px;
+      font-size:11px; letter-spacing:3px; text-transform:uppercase;
+      color:rgba(255,255,255,.5); cursor:pointer; user-select:none;
+      border-bottom:1px solid transparent; transition:color .2s,border-color .2s;
+    }
+    .settings-header:hover   { color:var(--c1); }
+    .settings-header.open    { border-bottom-color:var(--border); }
+    .arrow { margin-left:auto; transition:transform .3s; }
+    .settings-header.open .arrow { transform:rotate(180deg); }
+
+    .settings-body { display:grid; grid-template-rows:0fr; transition:grid-template-rows .35s ease; }
+    .settings-body.open { grid-template-rows:1fr; }
+    .settings-inner { overflow:hidden; }
+
+    .setting-row {
+      padding:12px 18px; display:flex; align-items:center;
+      justify-content:space-between; gap:10px; flex-wrap:wrap;
+      border-bottom:1px solid rgba(255,255,255,.04);
+    }
+    .setting-row:last-child { border-bottom:none; }
+    .setting-label { font-size:12px; color:rgba(255,255,255,.62); white-space:nowrap; }
+    .setting-sublabel { font-size:10px; color:rgba(255,255,255,.35); margin-top:2px; }
+
+    .tab-group { display:flex; gap:5px; flex-wrap:wrap; }
+    .tab-btn {
+      padding:5px 11px; font-size:10px; letter-spacing:1px;
+      border:1px solid var(--border); border-radius:6px;
+      cursor:pointer; color:rgba(255,255,255,.42);
+      font-family:'Exo 2',sans-serif; background:transparent;
+      transition:all .18s; -webkit-tap-highlight-color:transparent;
+    }
+    .tab-btn.active-cyan { background:var(--c1); color:#000; border-color:var(--c1); font-weight:700; }
+    .tab-btn.active-pink { background:var(--c2); color:#fff; border-color:var(--c2); font-weight:700; }
+    .tab-btn.active-orange { background:var(--c3); color:#000; border-color:var(--c3); font-weight:700; }
+
+    .vol-row { display:flex; align-items:center; gap:8px; }
+    .vol-icon { font-size:13px; min-width:18px; }
+    input[type=range] {
+      -webkit-appearance:none; appearance:none;
+      width:110px; height:4px;
+      background:rgba(255,255,255,.14); border-radius:4px; outline:none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:14px; height:14px;
+      border-radius:50%; background:var(--c1); cursor:pointer;
+    }
+
+    .theme-chips { display:flex; gap:7px; flex-wrap:wrap; }
+    .theme-chip {
+      width:32px; height:32px; border-radius:8px; cursor:pointer;
+      border:2px solid transparent; transition:border-color .2s,transform .15s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .theme-chip:hover   { transform:scale(1.15); }
+    .theme-chip.selected { border-color:#fff; box-shadow:0 0 8px rgba(255,255,255,.4); }
+
+    /* Map type cards */
+    .map-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .map-card {
+      padding:10px 6px; text-align:center; cursor:pointer;
+      border:1px solid var(--border); border-radius:10px;
+      transition:background .2s,transform .12s;
+      user-select:none; -webkit-tap-highlight-color:transparent;
+    }
+    .map-card:hover { background:rgba(0,255,224,.07); }
+    .map-card.selected { background:rgba(0,255,224,.14); border-color:var(--c1); }
+    .map-card-icon { font-size:20px; display:block; margin-bottom:4px; }
+    .map-card-name { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--c1); }
+
+    /* Wall mode options */
+    .wall-option {
+      flex:1; padding:7px 8px; text-align:center; cursor:pointer;
+      border:1px solid var(--border); border-radius:8px;
+      transition:background .2s; font-size:9px; letter-spacing:1px;
+      user-select:none; -webkit-tap-highlight-color:transparent; min-width:70px;
+    }
+    .wall-option:hover { background:rgba(0,255,224,.07); }
+    .wall-option.selected { background:rgba(0,255,224,.14); border-color:var(--c1); color:var(--c1); font-weight:700; }
+    .wall-option-icon { font-size:16px; display:block; margin-bottom:2px; }
+
+    .play-btn {
+      width:100%; padding:16px;
+      background:linear-gradient(135deg,var(--c1),#00b8a0);
+      color:#000; font-family:'Rajdhani',sans-serif;
+      font-size:20px; font-weight:700; letter-spacing:4px;
+      border:none; border-radius:12px; cursor:pointer; text-transform:uppercase;
+      transition:transform .12s,box-shadow .2s;
+      box-shadow:0 0 28px rgba(0,255,224,.3);
+      animation:fadeUp .5s .3s ease both;
+      -webkit-tap-highlight-color:transparent; flex-shrink:0;
+    }
+    .play-btn:hover  { transform:translateY(-2px); box-shadow:0 0 46px rgba(0,255,224,.5); }
+    .play-btn:active { transform:scale(.97); }
+
+    .hiscore  { font-size:11px; letter-spacing:2px; color:rgba(255,255,255,.26); text-align:center; animation:fadeUp .5s .4s ease both; }
+    .hiscore span { color:var(--c3); font-weight:700; }
+    .version  { font-size:9px; color:rgba(255,255,255,.11); letter-spacing:2px; text-align:center; }
+
+    @media (max-height:620px) {
+      .snake-emoji { font-size:22px; }
+      .logo-title  { font-size:40px; }
+      .logo-sub    { display:none; }
+      .wrapper     { gap:10px; }
+      .play-btn    { padding:13px; font-size:17px; }
+    }
+    @media (max-width:380px) {
+      .mode-card { padding:14px 6px; }
+      .mode-icon { font-size:20px; }
     }
   </style>
-
-  <title>Snake Menu</title>
 </head>
+<body>
+  <div class="bg-grid" id="bg-grid"></div>
+  <div class="bg-orbs">
+    <div class="orb orb1" id="orb1"></div>
+    <div class="orb orb2" id="orb2"></div>
+    <div class="orb orb3" id="orb3"></div>
+  </div>
 
-<body class="bg-gradient-to-br from-gray-900 via-black to-gray-900 min-h-screen flex items-center justify-center">
+  <div class="page">
+    <div class="wrapper">
 
-  <div class="text-center">
-    <h1 class="text-4xl md:text-5xl font-bold text-white mb-10 drop-shadow-xl animate-pulse">
-      Выбери режим игры
-    </h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto px-4">
-
-      <!-- CLASSIC MODE -->
-      <div onclick="openMode('oldest-snake.html')" 
-           class="card cursor-pointer bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/20 hover:border-white/40">
-        
-        <h2 class="text-2xl text-white font-semibold mb-4">Classic 90's</h2>
-        <p class="text-gray-300 mb-6">Классическая ретро-змейка со старой логикой.</p>
-
-        <div class="text-white text-6xl">🐍</div>
+      <div class="logo">
+        <span class="snake-emoji">🐍</span>
+        <div class="logo-title">SNAKE<span style="color:var(--c2)">X</span></div>
+        <div class="logo-sub" data-i18n="subtitle">— select mode & play —</div>
       </div>
 
-      <!-- MODERN MODE -->
-      <div onclick="openMode('old-snake.html')" 
-           class="card cursor-pointer bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/20 hover:border-white/40">
-        
-        <h2 class="text-2xl text-white font-semibold mb-4">NeoSnake</h2>
-        <p class="text-gray-300 mb-6">Современная графика, звуки, плавные анимации.</p>
-
-        <div class="text-white text-6xl">⚡</div>
+      <!-- VISUAL MODE -->
+      <div class="panel">
+        <div class="modes">
+          <div class="mode-card" onclick="selectMode('classic')" id="card-classic">
+            <span class="mode-icon">🕹️</span>
+            <div class="mode-name" data-i18n="mode_classic">Classic</div>
+            <div class="mode-desc" data-i18n="mode_classic_desc">Retro 90s</div>
+          </div>
+          <div class="mode-card" onclick="selectMode('neo')" id="card-neo">
+            <span class="mode-icon">⚡</span>
+            <div class="mode-name" data-i18n="mode_neo">NeoSnake</div>
+            <div class="mode-desc" data-i18n="mode_neo_desc">Modern</div>
+          </div>
+          <div class="mode-card" onclick="selectMode('neon')" id="card-neon">
+            <span class="mode-icon">🌀</span>
+            <div class="mode-name" data-i18n="mode_neon">Neon 3D</div>
+            <div class="mode-desc" data-i18n="mode_neon_desc">Neon glow</div>
+          </div>
+        </div>
       </div>
 
-      <!-- 3D MODE -->
-      <div onclick="openMode('snake.html')" 
-           class="card cursor-pointer bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/20 hover:border-white/40">
-        
-        <h2 class="text-2xl text-white font-semibold mb-4">3D Snake</h2>
-        <p class="text-gray-300 mb-6">Трёхмерная версия, как в аркадах.</p>
+      <!-- SETTINGS -->
+      <div class="panel">
+        <div class="settings-header" id="settings-hdr" onclick="toggleSettings()">
+          <span>⚙</span>
+          <span data-i18n="settings">Settings</span>
+          <span class="arrow">▾</span>
+        </div>
+        <div class="settings-body" id="settings-body">
+          <div class="settings-inner">
 
-        <div class="text-white text-6xl">🌀</div>
+            <!-- DIFFICULTY -->
+            <div class="setting-row">
+              <span class="setting-label" data-i18n="difficulty">Difficulty</span>
+              <div class="tab-group" id="diff-group">
+                <button class="tab-btn" data-diff="slow"   onclick="setDiff(this)" data-i18n="diff_slow">Slow</button>
+                <button class="tab-btn" data-diff="medium" onclick="setDiff(this)" data-i18n="diff_med">Medium</button>
+                <button class="tab-btn" data-diff="fast"   onclick="setDiff(this)" data-i18n="diff_fast">Fast</button>
+              </div>
+            </div>
+
+            <!-- MAP SIZE -->
+            <div class="setting-row">
+              <div>
+                <span class="setting-label" data-i18n="map_size">Map Size</span>
+                <div class="setting-sublabel" data-i18n="map_size_desc">Grid cells</div>
+              </div>
+              <div class="tab-group" id="size-group">
+                <button class="tab-btn" data-size="5"  onclick="setSize(this)">5×5</button>
+                <button class="tab-btn" data-size="10" onclick="setSize(this)">10×10</button>
+                <button class="tab-btn" data-size="15" onclick="setSize(this)">15×15</button>
+                <button class="tab-btn" data-size="20" onclick="setSize(this)">20×20</button>
+              </div>
+            </div>
+
+            <!-- MAP TYPE -->
+            <div class="setting-row" style="flex-direction:column; align-items:stretch;">
+              <span class="setting-label" data-i18n="map_type" style="margin-bottom:8px;">Map Type</span>
+              <div class="map-cards" id="map-type-group">
+                <div class="map-card" data-map="open" onclick="setMapType('open')">
+                  <span class="map-card-icon">🟩</span>
+                  <div class="map-card-name" data-i18n="map_open">Open</div>
+                </div>
+                <div class="map-card" data-map="building" onclick="setMapType('building')">
+                  <span class="map-card-icon">🏛️</span>
+                  <div class="map-card-name" data-i18n="map_building">Building</div>
+                </div>
+                <div class="map-card" data-map="walls" onclick="setMapType('walls')">
+                  <span class="map-card-icon">🧱</span>
+                  <div class="map-card-name" data-i18n="map_walls">Walls</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WALL COLLISION MODE -->
+            <div class="setting-row" style="flex-direction:column; align-items:stretch;">
+              <span class="setting-label" data-i18n="wall_mode" style="margin-bottom:8px;">Border Collision</span>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <div class="wall-option" data-wall="die" onclick="setWallMode('die')">
+                  <span class="wall-option-icon">💀</span>
+                  <span data-i18n="wall_die">Wall = Death</span>
+                </div>
+                <div class="wall-option" data-wall="wrap" onclick="setWallMode('wrap')">
+                  <span class="wall-option-icon">🔄</span>
+                  <span data-i18n="wall_wrap">Wrap-around</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAIL COLLISION MODE -->
+            <div class="setting-row" style="flex-direction:column; align-items:stretch;">
+              <span class="setting-label" data-i18n="tail_mode" style="margin-bottom:8px;">Tail Collision</span>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <div class="wall-option" data-tail="die" onclick="setTailMode('die')">
+                  <span class="wall-option-icon">☠️</span>
+                  <span data-i18n="tail_die">Tail = Death</span>
+                </div>
+                <div class="wall-option" data-tail="pass" onclick="setTailMode('pass')">
+                  <span class="wall-option-icon">👻</span>
+                  <span data-i18n="tail_pass">Pass through</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VOLUME -->
+            <div class="setting-row">
+              <span class="setting-label" data-i18n="volume">Volume</span>
+              <div class="vol-row">
+                <span class="vol-icon" id="vol-icon">🔊</span>
+                <input type="range" id="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)">
+              </div>
+            </div>
+
+            <!-- BACKGROUND -->
+            <div class="setting-row">
+              <span class="setting-label" data-i18n="background">Background</span>
+              <div class="theme-chips" id="theme-chips">
+                <div class="theme-chip" data-theme="dark"   title="Dark"
+                     style="background:linear-gradient(135deg,#050510,#1a1a3a)" onclick="setTheme('dark')"></div>
+                <div class="theme-chip" data-theme="cyber"  title="Cyber"
+                     style="background:linear-gradient(135deg,#010820,#003366)" onclick="setTheme('cyber')"></div>
+                <div class="theme-chip" data-theme="forest" title="Forest"
+                     style="background:linear-gradient(135deg,#030e03,#0a2a0a)" onclick="setTheme('forest')"></div>
+                <div class="theme-chip" data-theme="lava"   title="Lava"
+                     style="background:linear-gradient(135deg,#0e0300,#3a0a00)" onclick="setTheme('lava')"></div>
+              </div>
+            </div>
+
+            <!-- LANGUAGE -->
+            <div class="setting-row">
+              <span class="setting-label">Language</span>
+              <div class="tab-group" id="lang-group">
+                <button class="tab-btn" data-lang="ru" onclick="setLang('ru')">RU</button>
+                <button class="tab-btn" data-lang="en" onclick="setLang('en')">EN</button>
+                <button class="tab-btn" data-lang="uz" onclick="setLang('uz')">UZ</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
+
+      <button class="play-btn" onclick="startGame()" id="play-btn">▶  PLAY</button>
+      <div class="hiscore">Best: <span id="hs-val">0</span></div>
+      <div class="version">SnakeX v4.0</div>
 
     </div>
   </div>
 
   <script>
-    function openMode(file) {
-      document.body.classList.add("opacity-0", "transition", "duration-500");
-      setTimeout(() => {
-        window.location.href = file;
-      }, 350);
-    }
-  </script>
+  const LANGS = {
+    en:{
+      subtitle:'— select mode & play —',
+      mode_classic:'Classic', mode_classic_desc:'Retro 90s',
+      mode_neo:'NeoSnake',    mode_neo_desc:'Modern',
+      mode_neon:'Neon 3D',    mode_neon_desc:'Neon glow',
+      settings:'Settings', difficulty:'Difficulty',
+      diff_slow:'Slow', diff_med:'Medium', diff_fast:'Fast',
+      map_size:'Map Size', map_size_desc:'Grid cells',
+      map_type:'Map Type',
+      map_open:'Open', map_building:'Building', map_walls:'Walls',
+      wall_mode:'Border Collision',
+      wall_die:'Wall = Death', wall_wrap:'Wrap-around',
+      tail_mode:'Tail Collision',
+      tail_die:'Tail = Death', tail_pass:'Pass through',
+      volume:'Volume', background:'Background', play_btn:'▶  PLAY',
+    },
+    ru:{
+      subtitle:'— выбери режим & играй —',
+      mode_classic:'Classic', mode_classic_desc:'Ретро 90-х',
+      mode_neo:'NeoSnake',    mode_neo_desc:'Современный',
+      mode_neon:'Neon 3D',    mode_neon_desc:'Неоновый',
+      settings:'Настройки', difficulty:'Сложность',
+      diff_slow:'Медленно', diff_med:'Средне', diff_fast:'Быстро',
+      map_size:'Размер карты', map_size_desc:'Клетки сетки',
+      map_type:'Тип карты',
+      map_open:'Пустая', map_building:'Здание', map_walls:'Стены',
+      wall_mode:'Столкновение со стеной',
+      wall_die:'Стена = Смерть', wall_wrap:'Проход насквозь',
+      tail_mode:'Столкновение с хвостом',
+      tail_die:'Хвост = Смерть', tail_pass:'Проход сквозь хвост',
+      volume:'Громкость', background:'Фон', play_btn:'▶  ИГРАТЬ',
+    },
+    uz:{
+      subtitle:"— rejimni tanla & o'yna —",
+      mode_classic:'Classic', mode_classic_desc:'Retro 90s',
+      mode_neo:'NeoSnake',    mode_neo_desc:'Zamonaviy',
+      mode_neon:'Neon 3D',    mode_neon_desc:"Neon yog'du",
+      settings:'Sozlamalar', difficulty:'Qiyinlik',
+      diff_slow:'Sekin', diff_med:"O'rta", diff_fast:'Tez',
+      map_size:'Xarita hajmi', map_size_desc:'Kataklar',
+      map_type:'Xarita turi',
+      map_open:'Ochiq', map_building:'Bino', map_walls:'Devorlar',
+      wall_mode:'Chegara to\'qnashuvi',
+      wall_die:'Devor = O\'lim', wall_wrap:'Aylanib o\'tish',
+      tail_mode:'Dum to\'qnashuvi',
+      tail_die:'Dum = O\'lim', tail_pass:'Dumdan o\'tish',
+      volume:'Ovoz', background:'Fon', play_btn:"▶  O'YNASH",
+    },
+  };
 
+  const THEME_DEFS = {
+    dark:{ bg:'#050510', canvasBg:'#0a0a1a', orb1:'#00ffe0', orb2:'#ff3cac', orb3:'#f7b731', gridLine:'rgba(0,255,224,0.05)' },
+    cyber:{ bg:'#010820', canvasBg:'#010d2a', orb1:'#0088ff', orb2:'#00ffcc', orb3:'#7700ff', gridLine:'rgba(0,150,255,0.07)' },
+    forest:{ bg:'#030e03', canvasBg:'#051405', orb1:'#00cc44', orb2:'#88ff00', orb3:'#ffcc00', gridLine:'rgba(0,200,50,0.06)' },
+    lava:{ bg:'#0e0300', canvasBg:'#1a0500', orb1:'#ff4400', orb2:'#ff9900', orb3:'#ff0044', gridLine:'rgba(255,80,0,0.07)' },
+  };
+
+  let cfg = { lang:'en', mode:'neo', diff:'medium', volume:70, theme:'dark',
+              mapSize:20, mapType:'open', wallMode:'die', tailMode:'die' };
+  try { Object.assign(cfg, JSON.parse(localStorage.getItem('snakex-cfg')||'{}')); } catch(e){}
+  function saveCfg(){ localStorage.setItem('snakex-cfg', JSON.stringify(cfg)); }
+
+  function applyThemeToMenu(t, animate){
+    const td = THEME_DEFS[t]||THEME_DEFS.dark;
+    if(!animate){ document.body.style.transition='none'; }
+    document.body.style.background = td.bg;
+    if(!animate) requestAnimationFrame(()=>{ document.body.style.transition='background .5s ease'; });
+    const o1=document.getElementById('orb1'), o2=document.getElementById('orb2'), o3=document.getElementById('orb3');
+    o1.style.background=td.orb1; o2.style.background=td.orb2; o3.style.background=td.orb3;
+    document.getElementById('bg-grid').style.backgroundImage=
+      `linear-gradient(${td.gridLine} 1px,transparent 1px),linear-gradient(90deg,${td.gridLine} 1px,transparent 1px)`;
+    document.querySelectorAll('.theme-chip').forEach(c=>c.classList.toggle('selected', c.dataset.theme===t));
+  }
+
+  function setTheme(t){ cfg.theme=t; saveCfg(); applyThemeToMenu(t,true); }
+
+  function applyLang(){
+    const T=LANGS[cfg.lang]||LANGS.en;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.getAttribute('data-i18n'); if(T[k]!==undefined) el.textContent=T[k];
+    });
+    document.getElementById('play-btn').textContent=T.play_btn;
+    document.querySelectorAll('#lang-group .tab-btn').forEach(b=>
+      b.classList.toggle('active-pink', b.dataset.lang===cfg.lang));
+  }
+  function setLang(l){ cfg.lang=l; saveCfg(); applyLang(); }
+
+  function setDiff(btn){
+    cfg.diff=btn.dataset.diff; saveCfg();
+    document.querySelectorAll('#diff-group .tab-btn').forEach(b=>
+      b.classList.toggle('active-cyan', b.dataset.diff===cfg.diff));
+  }
+
+  function setSize(btn){
+    cfg.mapSize=parseInt(btn.dataset.size); saveCfg();
+    document.querySelectorAll('#size-group .tab-btn').forEach(b=>
+      b.classList.toggle('active-cyan', b.dataset.size==cfg.mapSize));
+  }
+
+  function setMapType(t){
+    cfg.mapType=t; saveCfg();
+    document.querySelectorAll('.map-card').forEach(c=>c.classList.toggle('selected', c.dataset.map===t));
+  }
+
+  function setWallMode(m){
+    cfg.wallMode=m; saveCfg();
+    document.querySelectorAll('[data-wall]').forEach(c=>c.classList.toggle('selected', c.dataset.wall===m));
+  }
+
+  function setTailMode(m){
+    cfg.tailMode=m; saveCfg();
+    document.querySelectorAll('[data-tail]').forEach(c=>c.classList.toggle('selected', c.dataset.tail===m));
+  }
+
+  function setVolume(v){
+    cfg.volume=parseInt(v); saveCfg();
+    document.getElementById('vol-icon').textContent=v==0?'🔇':v<50?'🔉':'🔊';
+  }
+
+  function selectMode(m){
+    cfg.mode=m; saveCfg();
+    document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
+    document.getElementById('card-'+m).classList.add('selected');
+  }
+
+  function toggleSettings(){
+    const hdr=document.getElementById('settings-hdr');
+    const body=document.getElementById('settings-body');
+    const open=body.classList.toggle('open');
+    hdr.classList.toggle('open',open);
+  }
+
+  function startGame(){
+    saveCfg();
+    document.body.style.opacity='0';
+    document.body.style.transition='opacity .25s';
+    setTimeout(()=>{ window.location.href='snake.html'; }, 250);
+  }
+
+  // INIT
+  applyThemeToMenu(cfg.theme, false);
+  selectMode(cfg.mode);
+  document.querySelectorAll('#diff-group .tab-btn').forEach(b=>
+    b.classList.toggle('active-cyan', b.dataset.diff===cfg.diff));
+  document.querySelectorAll('#size-group .tab-btn').forEach(b=>
+    b.classList.toggle('active-cyan', b.dataset.size==cfg.mapSize));
+  setMapType(cfg.mapType);
+  setWallMode(cfg.wallMode);
+  setTailMode(cfg.tailMode);
+  document.getElementById('vol-slider').value=cfg.volume;
+  setVolume(cfg.volume);
+  applyLang();
+  document.getElementById('hs-val').textContent=localStorage.getItem('snakex-highscore')||0;
+  </script>
 </body>
 </html>
